@@ -13,6 +13,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
@@ -136,12 +137,19 @@ def train_model(
 
     model.train()
     epoch_stats: list[dict[str, float]] = []
+    interactive_progress = sys.stderr.isatty() or os.getenv("FORCE_TQDM", "0") == "1"
     for epoch in range(epochs):
         total = 0.0
         total_tower = 0.0
         total_wd = 0.0
-        pbar = tqdm(loader, desc=f"Epoch {epoch+1}/{epochs}", leave=False)
-        for u, p, n in pbar:
+        pbar = tqdm(
+            loader,
+            desc=f"Epoch {epoch+1}/{epochs}",
+            leave=False,
+            disable=not interactive_progress,
+            dynamic_ncols=True,
+        )
+        for batch_idx, (u, p, n) in enumerate(pbar, start=1):
             u, p, n = u.to(device), p.to(device), n.to(device)
             # Stage 1 loss: retrieval (BPR on tower scores)
             loss_tower = bpr_loss(model.score_tower(u, p), model.score_tower(u, n))
@@ -154,6 +162,13 @@ def train_model(
             total += loss.item()
             total_tower += loss_tower.item()
             total_wd += loss_wd.item()
+            if interactive_progress and batch_idx % 100 == 0:
+                pbar.set_postfix({"loss": f"{total / batch_idx:.4f}"})
+            if (not interactive_progress) and (batch_idx % 100 == 0 or batch_idx == len(loader)):
+                log.info(
+                    f"      epoch {epoch+1}/{epochs} batch {batch_idx}/{len(loader)} "
+                    f"loss={total / batch_idx:.4f} tower={total_tower / batch_idx:.4f} wd={total_wd / batch_idx:.4f}"
+                )
         pbar.close()
         mean_total = total / max(len(loader), 1)
         mean_tower = total_tower / max(len(loader), 1)

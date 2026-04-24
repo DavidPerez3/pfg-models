@@ -11,6 +11,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
@@ -88,10 +89,17 @@ def train_two_tower(model, train_df, test_df, n_items, device, eval_fn, item_emb
     model.train()
     epoch_losses: list[float] = []
     epoch_metrics_list: list[dict] = []
+    interactive_progress = sys.stderr.isatty() or os.getenv("FORCE_TQDM", "0") == "1"
     
     for epoch in range(epochs):
         total_loss = 0.0
-        pbar = tqdm(loader, desc=f"Epoch {epoch+1}/{epochs}", leave=False)
+        pbar = tqdm(
+            loader,
+            desc=f"Epoch {epoch+1}/{epochs}",
+            leave=False,
+            disable=not interactive_progress,
+            dynamic_ncols=True,
+        )
         for batch_idx, (u, p, n) in enumerate(pbar, start=1):
             u, p, n = u.to(device), p.to(device), n.to(device)
             loss = bpr_loss(model.score(u, p), model.score(u, n))
@@ -100,9 +108,9 @@ def train_two_tower(model, train_df, test_df, n_items, device, eval_fn, item_emb
             optimizer.step()
             total_loss += loss.item()
 
-            if batch_idx % 100 == 0:
+            if interactive_progress and batch_idx % 100 == 0:
                 pbar.set_postfix({"loss": f"{total_loss / batch_idx:.4f}"})
-            if batch_idx % 1000 == 0:
+            if (interactive_progress and batch_idx % 1000 == 0) or ((not interactive_progress) and (batch_idx % 100 == 0 or batch_idx == len(loader))):
                 log.info(f"      epoch {epoch+1}/{epochs} batch {batch_idx}/{len(loader)} loss={total_loss / batch_idx:.4f}")
         pbar.close()
 

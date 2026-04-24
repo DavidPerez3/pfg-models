@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
 import sys
 import time
 from pathlib import Path
@@ -149,11 +150,18 @@ def train_sasrec(
     model.train()
     epoch_losses: list[float] = []
     epoch_metrics_list: list[dict] = []
+    interactive_progress = sys.stderr.isatty() or os.getenv("FORCE_TQDM", "0") == "1"
     
     for epoch in range(epochs):
         total = 0.0
-        pbar = tqdm(loader, desc=f"Epoch {epoch+1}/{epochs}", leave=False)
-        for seq, pos, neg in pbar:
+        pbar = tqdm(
+            loader,
+            desc=f"Epoch {epoch+1}/{epochs}",
+            leave=False,
+            disable=not interactive_progress,
+            dynamic_ncols=True,
+        )
+        for batch_idx, (seq, pos, neg) in enumerate(pbar, start=1):
             seq, pos, neg = seq.to(device), pos.to(device), neg.to(device)
             h = model(seq)                                    # [B, d]
             pos_emb = model.item_emb(pos)                    # [B, d]
@@ -168,6 +176,10 @@ def train_sasrec(
             loss.backward()
             optimizer.step()
             total += loss.item()
+            if interactive_progress and batch_idx % 100 == 0:
+                pbar.set_postfix({"loss": f"{total / batch_idx:.4f}"})
+            if (not interactive_progress) and (batch_idx % 100 == 0 or batch_idx == len(loader)):
+                log.info(f"      epoch {epoch+1}/{epochs} batch {batch_idx}/{len(loader)} loss={total / batch_idx:.4f}")
         pbar.close()
         epoch_loss = total / max(len(loader), 1)
         epoch_losses.append(float(epoch_loss))
