@@ -1,0 +1,12 @@
+data/
+weights/
+results/
+wandb/
+__pycache__/
+*.pyc
+.venv/
+.env
+*.pt
+*.pth
+*.ckpt
+*.npy

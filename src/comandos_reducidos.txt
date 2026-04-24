@@ -1,0 +1,151 @@
+### MODELO: 01_matrix_factorization.py ###
+"""
+python 01_matrix_factorization.py --dataset movielens --factors 64 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group movielens-mf
+python 01_matrix_factorization.py --dataset movielens --factors 64 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group movielens-mf
+python 01_matrix_factorization.py --dataset movielens --factors 64 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group movielens-mf
+python 01_matrix_factorization.py --dataset movielens --factors 64 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group movielens-mf
+python 01_matrix_factorization.py --dataset movielens --factors 128 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group movielens-mf
+python 01_matrix_factorization.py --dataset movielens --factors 128 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group movielens-mf
+python 01_matrix_factorization.py --dataset movielens --factors 128 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group movielens-mf
+python 01_matrix_factorization.py --dataset movielens --factors 128 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group movielens-mf
+"""
+"""
+python 01_matrix_factorization.py --dataset amazon_electronics --factors 64 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-mf
+python 01_matrix_factorization.py --dataset amazon_electronics --factors 64 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-mf
+python 01_matrix_factorization.py --dataset amazon_electronics --factors 64 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-mf
+python 01_matrix_factorization.py --dataset amazon_electronics --factors 64 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-mf
+python 01_matrix_factorization.py --dataset amazon_electronics --factors 128 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-mf
+python 01_matrix_factorization.py --dataset amazon_electronics --factors 128 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-mf
+python 01_matrix_factorization.py --dataset amazon_electronics --factors 128 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-mf
+python 01_matrix_factorization.py --dataset amazon_electronics --factors 128 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-mf
+"""
+"""
+python 01_matrix_factorization.py --dataset yelp --factors 64 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group yelp-mf
+python 01_matrix_factorization.py --dataset yelp --factors 64 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group yelp-mf
+python 01_matrix_factorization.py --dataset yelp --factors 64 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group yelp-mf
+python 01_matrix_factorization.py --dataset yelp --factors 64 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group yelp-mf
+python 01_matrix_factorization.py --dataset yelp --factors 128 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group yelp-mf
+python 01_matrix_factorization.py --dataset yelp --factors 128 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group yelp-mf
+python 01_matrix_factorization.py --dataset yelp --factors 128 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group yelp-mf
+python 01_matrix_factorization.py --dataset yelp --factors 128 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group yelp-mf
+"""
+"""
+python 01_matrix_factorization.py --dataset lastfm --factors 64 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group lastfm-mf
+python 01_matrix_factorization.py --dataset lastfm --factors 64 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group lastfm-mf
+python 01_matrix_factorization.py --dataset lastfm --factors 64 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group lastfm-mf
+python 01_matrix_factorization.py --dataset lastfm --factors 64 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group lastfm-mf
+python 01_matrix_factorization.py --dataset lastfm --factors 128 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group lastfm-mf
+python 01_matrix_factorization.py --dataset lastfm --factors 128 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group lastfm-mf
+python 01_matrix_factorization.py --dataset lastfm --factors 128 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group lastfm-mf
+python 01_matrix_factorization.py --dataset lastfm --factors 128 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group lastfm-mf
+"""
+"""
+python 01_matrix_factorization.py --dataset foursquare --factors 64 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group foursquare-mf
+python 01_matrix_factorization.py --dataset foursquare --factors 64 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group foursquare-mf
+python 01_matrix_factorization.py --dataset foursquare --factors 64 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group foursquare-mf
+python 01_matrix_factorization.py --dataset foursquare --factors 64 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group foursquare-mf
+python 01_matrix_factorization.py --dataset foursquare --factors 128 --regularization 0.01 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group foursquare-mf
+python 01_matrix_factorization.py --dataset foursquare --factors 128 --regularization 0.01 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group foursquare-mf
+python 01_matrix_factorization.py --dataset foursquare --factors 128 --regularization 0.05 --alpha 10 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group foursquare-mf
+python 01_matrix_factorization.py --dataset foursquare --factors 128 --regularization 0.05 --alpha 40 --iterations 20 --wandb --wandb-project pfg-recs --wandb-group foursquare-mf
+"""
+
+### MODELO: 02_two_tower.py ###
+"""
+python 02_two_tower.py --dataset movielens --dim 64 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt
+"""
+python 02_two_tower.py --dataset movielens --dim 64 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt
+python 02_two_tower.py --dataset movielens --dim 64 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt
+python 02_two_tower.py --dataset movielens --dim 64 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt
+python 02_two_tower.py --dataset movielens --dim 128 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt
+python 02_two_tower.py --dataset movielens --dim 128 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt
+python 02_two_tower.py --dataset movielens --dim 128 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt
+python 02_two_tower.py --dataset movielens --dim 128 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt
+python 02_two_tower.py --dataset amazon_electronics --dim 64 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt
+python 02_two_tower.py --dataset amazon_electronics --dim 64 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt
+python 02_two_tower.py --dataset amazon_electronics --dim 64 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt
+python 02_two_tower.py --dataset amazon_electronics --dim 64 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt
+python 02_two_tower.py --dataset amazon_electronics --dim 128 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt
+python 02_two_tower.py --dataset amazon_electronics --dim 128 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt
+python 02_two_tower.py --dataset amazon_electronics --dim 128 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt
+python 02_two_tower.py --dataset amazon_electronics --dim 128 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt
+"""
+python 02_two_tower.py --dataset yelp --dim 64 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt
+"""
+python 02_two_tower.py --dataset yelp --dim 64 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt
+python 02_two_tower.py --dataset yelp --dim 64 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt
+python 02_two_tower.py --dataset yelp --dim 64 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt
+python 02_two_tower.py --dataset yelp --dim 128 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt
+python 02_two_tower.py --dataset yelp --dim 128 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt
+python 02_two_tower.py --dataset yelp --dim 128 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt
+python 02_two_tower.py --dataset yelp --dim 128 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt
+"""
+python 02_two_tower.py --dataset lastfm --dim 64 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt
+python 02_two_tower.py --dataset lastfm --dim 64 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt
+python 02_two_tower.py --dataset lastfm --dim 64 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt
+python 02_two_tower.py --dataset lastfm --dim 64 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt
+python 02_two_tower.py --dataset lastfm --dim 128 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt
+python 02_two_tower.py --dataset lastfm --dim 128 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt
+python 02_two_tower.py --dataset lastfm --dim 128 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt
+python 02_two_tower.py --dataset lastfm --dim 128 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt
+"""
+python 02_two_tower.py --dataset foursquare --dim 64 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt
+python 02_two_tower.py --dataset foursquare --dim 64 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt
+python 02_two_tower.py --dataset foursquare --dim 64 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt
+python 02_two_tower.py --dataset foursquare --dim 64 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt
+python 02_two_tower.py --dataset foursquare --dim 128 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt
+python 02_two_tower.py --dataset foursquare --dim 128 --lr 0.001 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt
+python 02_two_tower.py --dataset foursquare --dim 128 --lr 0.003 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt
+python 02_two_tower.py --dataset foursquare --dim 128 --lr 0.003 --dropout 0.1 --n-neg 10 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt
+
+### MODELO: 03_two_tower_wide_deep.py ###
+python 03_two_tower_wide_deep.py --dataset movielens --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group movielens-tt-wd
+python 03_two_tower_wide_deep.py --dataset movielens --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt-wd
+python 03_two_tower_wide_deep.py --dataset movielens --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group movielens-tt-wd
+python 03_two_tower_wide_deep.py --dataset movielens --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group movielens-tt-wd
+python 03_two_tower_wide_deep.py --dataset amazon_electronics --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt-wd
+python 03_two_tower_wide_deep.py --dataset amazon_electronics --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt-wd
+python 03_two_tower_wide_deep.py --dataset amazon_electronics --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt-wd
+python 03_two_tower_wide_deep.py --dataset amazon_electronics --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-tt-wd
+python 03_two_tower_wide_deep.py --dataset yelp --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group yelp-tt-wd
+python 03_two_tower_wide_deep.py --dataset yelp --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt-wd
+python 03_two_tower_wide_deep.py --dataset yelp --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group yelp-tt-wd
+python 03_two_tower_wide_deep.py --dataset yelp --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt-wd
+"""
+python 03_two_tower_wide_deep.py --dataset lastfm --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt-wd
+python 03_two_tower_wide_deep.py --dataset lastfm --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt-wd
+python 03_two_tower_wide_deep.py --dataset lastfm --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt-wd
+python 03_two_tower_wide_deep.py --dataset lastfm --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt-wd
+"""
+python 03_two_tower_wide_deep.py --dataset foursquare --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt-wd
+python 03_two_tower_wide_deep.py --dataset foursquare --candidates 500 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt-wd
+python 03_two_tower_wide_deep.py --dataset foursquare --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt-wd
+python 03_two_tower_wide_deep.py --dataset foursquare --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt-wd
+
+### MODELO: 04_sas_rec.py ###
+"""
+python 04_sasrec.py --dataset movielens --max-len 100 --d-model 64 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-sasrec
+python 04_sasrec.py --dataset movielens --max-len 100 --d-model 64 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-sasrec
+
+"""
+python 04_sasrec.py --dataset movielens --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-sasrec
+python 04_sasrec.py --dataset movielens --max-len 100 --d-model 128 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-sasrec
+python 04_sasrec.py --dataset amazon_electronics --max-len 100 --d-model 64 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-sasrec
+python 04_sasrec.py --dataset amazon_electronics --max-len 100 --d-model 64 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-sasrec
+python 04_sasrec.py --dataset amazon_electronics --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-sasrec
+python 04_sasrec.py --dataset amazon_electronics --max-len 100 --d-model 128 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-sasrec
+python 04_sasrec.py --dataset yelp --max-len 100 --d-model 64 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-sasrec
+python 04_sasrec.py --dataset yelp --max-len 100 --d-model 64 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-sasrec
+python 04_sasrec.py --dataset yelp --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-sasrec
+python 04_sasrec.py --dataset yelp --max-len 100 --d-model 128 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-sasrec
+"""
+python 04_sasrec.py --dataset lastfm --max-len 100 --d-model 64 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-sasrec
+python 04_sasrec.py --dataset lastfm --max-len 100 --d-model 64 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-sasrec
+python 04_sasrec.py --dataset lastfm --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-sasrec
+python 04_sasrec.py --dataset lastfm --max-len 100 --d-model 128 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-sasrec
+"""
+python 04_sasrec.py --dataset foursquare --max-len 100 --d-model 64 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-sasrec
+python 04_sasrec.py --dataset foursquare --max-len 100 --d-model 64 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-sasrec
+python 04_sasrec.py --dataset foursquare --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-sasrec
+python 04_sasrec.py --dataset foursquare --max-len 100 --d-model 128 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-sasrec
+

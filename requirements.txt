@@ -1,0 +1,16 @@
+# Core data & ML
+pandas>=2.0
+numpy>=1.24
+pyarrow>=14.0
+
+# Elasticsearch client
+elasticsearch>=8.12,<9.0
+
+# Text embeddings
+sentence-transformers>=2.6
+
+# Progress bars (used by sentence-transformers)
+tqdm>=4.65
+
+# Experiment tracking
+wandb>=0.16
