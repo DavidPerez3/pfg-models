@@ -40,7 +40,7 @@ BATCH     = 512
 LR        = 1e-3
 DROPOUT   = 0.1
 N_NEG     = 1
-DEVICE    = "cpu"
+DEVICE    = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # ── Model ─────────────────────────────────────────────────────────────────────

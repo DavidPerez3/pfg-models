@@ -33,6 +33,7 @@ FACTORS      = 64        # latent dimensions
 ITERATIONS   = 20        # ALS iterations
 REGULARIZATION = 0.01
 ALPHA        = 40.0      # confidence weight: c_ui = 1 + alpha * r_ui
+USE_GPU      = True
 
 
 def run(dataset: str, sample: int | None, hparams: dict | None = None):
@@ -44,6 +45,7 @@ def run(dataset: str, sample: int | None, hparams: dict | None = None):
         "iterations": ITERATIONS,
         "regularization": REGULARIZATION,
         "alpha": ALPHA,
+        "use_gpu": USE_GPU,
     }
 
     # 1. Load + encode
@@ -84,7 +86,7 @@ def run(dataset: str, sample: int | None, hparams: dict | None = None):
         factors=int(hp["factors"]),
         iterations=int(hp["iterations"]),
         regularization=float(hp["regularization"]),
-        use_gpu=False,
+        use_gpu=bool(hp["use_gpu"]),
         random_state=42,
     )
     model.fit(train_mat_conf, show_progress=True)
@@ -132,6 +134,8 @@ def main():
     parser.add_argument("--iterations", type=int, default=ITERATIONS)
     parser.add_argument("--regularization", type=float, default=REGULARIZATION)
     parser.add_argument("--alpha", type=float, default=ALPHA)
+    parser.add_argument("--use-gpu", dest="use_gpu", action="store_true", default=USE_GPU)
+    parser.add_argument("--no-gpu", dest="use_gpu", action="store_false")
     args = parser.parse_args()
     apply_wandb_env(args)
 
@@ -145,6 +149,7 @@ def main():
                 "iterations": args.iterations,
                 "regularization": args.regularization,
                 "alpha": args.alpha,
+                "use_gpu": args.use_gpu,
             }
             run(ds, sample, hparams=hp)
         except Exception as e:

@@ -44,7 +44,7 @@ LR_DEEP    = 1e-3
 DROPOUT    = 0.15
 CANDIDATES = 200     # Stage 1 retrieval size
 N_NEG      = 1
-DEVICE     = "cpu"
+DEVICE     = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # ── Model ──────────────────────────────────────────────────────────────────────

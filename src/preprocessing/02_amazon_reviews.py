@@ -8,6 +8,7 @@ Each file is large (~4 GB JSON Lines) — read in chunks.
 
 Output:
   data/processed/amazon_electronics/interactions.parquet
+  data/processed/amazon_electronics/items.parquet
 """
 
 import time
@@ -50,6 +51,46 @@ def parse_style(style_val) -> str:
     except Exception:
         pass
     return str(style_val)
+
+
+def build_items_metadata(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Build item-level metadata from review interactions.
+    This provides items.parquet even without an external product catalog.
+    """
+    rows = []
+    for item_id, group in df.groupby("item_id", sort=False):
+        record = {
+            "item_id": item_id,
+            "item_name": str(item_id),
+            "n_reviews": int(len(group)),
+            "avg_rating": float(group["rating"].mean()),
+            "rating_std": float(group["rating"].std(ddof=0)) if len(group) > 1 else 0.0,
+            "timestamp_min": int(group["timestamp"].min()),
+            "timestamp_max": int(group["timestamp"].max()),
+        }
+
+        if "verified" in group.columns:
+            record["verified_ratio"] = float(group["verified"].astype("float32").mean())
+        if "review_length" in group.columns:
+            record["avg_review_length"] = float(group["review_length"].mean())
+        if "vote" in group.columns:
+            record["avg_vote"] = float(group["vote"].mean())
+        if "style_str" in group.columns:
+            styles = group["style_str"].dropna().astype(str)
+            record["top_style"] = styles.mode().iloc[0] if not styles.empty else ""
+        if "summary" in group.columns:
+            summaries = group["summary"].dropna().astype(str).str.strip()
+            summaries = summaries[summaries != ""]
+            record["sample_summary"] = summaries.iloc[0] if not summaries.empty else ""
+
+        rows.append(record)
+
+    items = pd.DataFrame(rows)
+    for col in ["verified_ratio", "avg_review_length", "avg_vote", "top_style", "sample_summary"]:
+        if col not in items.columns:
+            items[col] = np.nan if col not in {"top_style", "sample_summary"} else ""
+    return items
 
 
 def process_amazon(name: str, path: Path):
@@ -101,9 +142,18 @@ def process_amazon(name: str, path: Path):
     # ── Encode IDs ──────────────────────────────────────────────────────────
     df = encode_ids(df, ["user_id", "item_id"])
 
+    items = build_items_metadata(df)
+    if "item_id_idx" in df.columns:
+        item_idx_map = (
+            df[["item_id", "item_id_idx"]]
+            .drop_duplicates("item_id")
+            .set_index("item_id")["item_id_idx"]
+        )
+        items["item_id_idx"] = items["item_id"].map(item_idx_map).astype("int32")
+
     validate_schema(df, name)
     report_stats(df, name)
-    save_processed(df, name)
+    save_processed(df, name, extra=items)
     log.info(f"{name} done in {time.time() - t0:.1f}s")
 
 

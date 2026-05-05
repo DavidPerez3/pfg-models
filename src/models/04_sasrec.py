@@ -44,7 +44,7 @@ EPOCHS    = 10
 BATCH     = 256
 LR        = 1e-3
 NEG_SAMPLES = 1     # negative items per positive
-DEVICE    = "cpu"
+DEVICE    = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # ── SASRec Model ──────────────────────────────────────────────────────────────
