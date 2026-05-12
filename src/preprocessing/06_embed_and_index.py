@@ -83,7 +83,6 @@ def text_foursquare(row: pd.Series) -> str:
 
 TEXT_BUILDERS = {
     "movielens": text_movielens,
-    "amazon_movies": text_amazon,
     "amazon_electronics": text_amazon,
     "yelp": text_yelp,
     "lastfm": text_lastfm,
