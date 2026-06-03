@@ -21,6 +21,12 @@ from utils import DATA_DIR, log, validate_schema, report_stats, save_processed, 
 
 AMAZON_DIR = DATA_DIR / "Amazon Reviews"
 CHUNK_SIZE = 200_000
+AMAZON_METADATA_CANDIDATES = [
+    AMAZON_DIR / "meta_Electronics.json",
+    AMAZON_DIR / "meta_Electronics.json.gz",
+    DATA_DIR / "meta_Electronics.json",
+    DATA_DIR / "meta_Electronics.json.gz",
+]
 
 DATASETS = {
     "amazon_electronics": AMAZON_DIR / "Electronics_5.json",
@@ -53,7 +59,90 @@ def parse_style(style_val) -> str:
     return str(style_val)
 
 
-def build_items_metadata(df: pd.DataFrame) -> pd.DataFrame:
+def _join_text_list(value) -> str:
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return ""
+    if isinstance(value, (list, tuple, set)):
+        return " | ".join(str(v).strip() for v in value if str(v).strip())
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return ""
+        try:
+            parsed = ast.literal_eval(raw)
+            if isinstance(parsed, (list, tuple, set)):
+                return " | ".join(str(v).strip() for v in parsed if str(v).strip())
+        except Exception:
+            pass
+        return raw
+    return str(value).strip()
+
+
+def _flatten_categories(value) -> str:
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return ""
+    flattened = []
+    if isinstance(value, (list, tuple)):
+        for entry in value:
+            if isinstance(entry, (list, tuple)):
+                flattened.extend(str(v).strip() for v in entry if str(v).strip())
+            elif str(entry).strip():
+                flattened.append(str(entry).strip())
+    elif isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return ""
+        try:
+            parsed = ast.literal_eval(raw)
+            return _flatten_categories(parsed)
+        except Exception:
+            flattened.append(raw)
+    else:
+        flattened.append(str(value).strip())
+    deduped = []
+    seen = set()
+    for token in flattened:
+        key = token.lower()
+        if key not in seen:
+            seen.add(key)
+            deduped.append(token)
+    return " | ".join(deduped)
+
+
+def load_amazon_catalog() -> pd.DataFrame | None:
+    """
+    Optionally load a product metadata file if present. This is not required
+    for preprocessing to run, but when available it dramatically improves item
+    naming and semantic indexing.
+    """
+    metadata_path = next((p for p in AMAZON_METADATA_CANDIDATES if p.exists()), None)
+    if metadata_path is None:
+        log.warning("No Amazon product catalog file found. Falling back to review-derived metadata only.")
+        return None
+
+    log.info(f"Loading Amazon product catalog from {metadata_path.name} ...")
+    compression = "gzip" if metadata_path.suffix == ".gz" else None
+    df = pd.read_json(metadata_path, lines=True, compression=compression)
+    if "asin" not in df.columns:
+        log.warning("Amazon product catalog does not contain 'asin'. Ignoring external metadata.")
+        return None
+
+    catalog = pd.DataFrame(
+        {
+            "item_id": df["asin"].astype("string").str.strip(),
+            "title": df.get("title", pd.Series(index=df.index, dtype="string")).astype("string").str.strip(),
+            "brand": df.get("brand", pd.Series(index=df.index, dtype="string")).astype("string").str.strip(),
+            "category": df.get("categories", pd.Series(index=df.index)).apply(_flatten_categories),
+            "description": df.get("description", pd.Series(index=df.index)).apply(_join_text_list),
+            "feature_text": df.get("feature", pd.Series(index=df.index)).apply(_join_text_list),
+            "price_raw": df.get("price", pd.Series(index=df.index, dtype="string")).astype("string").str.strip(),
+        }
+    )
+    catalog = catalog.drop_duplicates("item_id").reset_index(drop=True)
+    return catalog
+
+
+def build_items_metadata(df: pd.DataFrame, catalog: pd.DataFrame | None = None) -> pd.DataFrame:
     """
     Build item-level metadata from review interactions.
     This provides items.parquet even without an external product catalog.
@@ -83,13 +172,37 @@ def build_items_metadata(df: pd.DataFrame) -> pd.DataFrame:
             summaries = group["summary"].dropna().astype(str).str.strip()
             summaries = summaries[summaries != ""]
             record["sample_summary"] = summaries.iloc[0] if not summaries.empty else ""
+            if not summaries.empty:
+                record["summary_mode"] = summaries.mode().iloc[0]
+                record["summary_examples"] = " | ".join(dict.fromkeys(summaries.head(3).tolist()))
+
+        if "reviewText" in group.columns:
+            reviews = group["reviewText"].dropna().astype(str).str.strip()
+            reviews = reviews[reviews != ""]
+            if not reviews.empty:
+                record["sample_review_excerpt"] = reviews.iloc[0][:280]
 
         rows.append(record)
 
     items = pd.DataFrame(rows)
+    if catalog is not None and not catalog.empty:
+        items = items.merge(catalog, on="item_id", how="left")
+        title_mask = items.get("title", pd.Series(index=items.index, dtype="string")).fillna("").astype(str).str.strip() != ""
+        items.loc[title_mask, "item_name"] = items.loc[title_mask, "title"].astype(str)
+    else:
+        items["title"] = ""
+        items["brand"] = ""
+        items["category"] = ""
+        items["description"] = ""
+        items["feature_text"] = ""
+        items["price_raw"] = ""
+
     for col in ["verified_ratio", "avg_review_length", "avg_vote", "top_style", "sample_summary"]:
         if col not in items.columns:
             items[col] = np.nan if col not in {"top_style", "sample_summary"} else ""
+    for col in ["summary_mode", "summary_examples", "sample_review_excerpt", "title", "brand", "category", "description", "feature_text", "price_raw"]:
+        if col not in items.columns:
+            items[col] = ""
     return items
 
 
@@ -99,6 +212,7 @@ def process_amazon(name: str, path: Path):
     log.info(f"Processing {name} from {path.name}")
 
     df = read_jsonlines_chunked(path)
+    catalog = load_amazon_catalog()
 
     # ── Rename to unified schema ────────────────────────────────────────────
     df = df.rename(columns={
@@ -142,7 +256,7 @@ def process_amazon(name: str, path: Path):
     # ── Encode IDs ──────────────────────────────────────────────────────────
     df = encode_ids(df, ["user_id", "item_id"])
 
-    items = build_items_metadata(df)
+    items = build_items_metadata(df, catalog=catalog)
     if "item_id_idx" in df.columns:
         item_idx_map = (
             df[["item_id", "item_id_idx"]]

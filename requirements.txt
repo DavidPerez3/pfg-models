@@ -2,12 +2,20 @@
 pandas>=2.0
 numpy>=1.24
 pyarrow>=14.0
+scipy>=1.11
+
+# Classical recommendation training
+implicit>=0.7
+
+# Deep learning backbones
+torch>=2.4
 
 # Elasticsearch client
 elasticsearch>=8.12,<9.0
 
 # Text embeddings
 sentence-transformers>=2.6
+requests>=2.31
 
 # Progress bars (used by sentence-transformers)
 tqdm>=4.65

@@ -326,6 +326,7 @@ def compute_metrics(
     catalog_size: int,
     k: int = 10,
     max_users: int = 2000,
+    progress_callback=None,
 ) -> dict:
     """
     Evaluate a recommendation function over test users.
@@ -341,7 +342,8 @@ def compute_metrics(
         rng = np.random.default_rng(0)
         test_users = rng.choice(test_users, size=max_users, replace=False)
 
-    for user_idx in test_users:
+    total_users = len(test_users)
+    for position, user_idx in enumerate(test_users, start=1):
         relevant = set(test_df[test_df["user_idx"] == user_idx]["item_idx"].tolist())
         if not relevant:
             continue
@@ -349,6 +351,12 @@ def compute_metrics(
         t0 = time.perf_counter()
         recs = get_recommendations(int(user_idx))
         latencies.append((time.perf_counter() - t0) * 1000)  # ms
+
+        if progress_callback is not None:
+            try:
+                progress_callback(position, total_users, int(user_idx), recs)
+            except Exception:
+                pass
 
         ndcgs.append(ndcg_at_k(recs, relevant, k))
         recalls.append(recall_at_k(recs, relevant, k))

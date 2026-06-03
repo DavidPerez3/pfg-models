@@ -1,47 +1,51 @@
-﻿# Runs pendientes detectadas frente a runs_flat.csv
-# Generado automaticamente para ejecucion en Ubuntu (python3)
-# Fecha: 2026-05-05 11:45:57
-# Total pendientes: 30
+﻿# Runs pendientes / propuestas de ejecucion en Ubuntu (python3)
+# Actualizado manualmente: 2026-06-03
+#
+# CRITERIO ACTUAL:
+# - LastFM vuelve a artist-level como benchmark activo.
+# - Las runs track-level lanzadas entre 2026-06-02 y 2026-06-03 quedan
+#   como evidencia exploratoria, pero NO como benchmark final.
+# - Las runs historicas artist-level vuelven a ser la referencia valida
+#   para la comparativa final.
+# - Por tanto, LastFM deja de requerir un rescreen completo inmediato.
+#   Solo tocaria relanzar alguna run artist-level si mas adelante se quiere
+#   reproducir exactamente el pipeline refrescado con pesos nuevos.
+# - LLM+RAG no tiene runs offline maduras en W&B todavia. Tras las pruebas
+#   iniciales, el enfoque se mantendra como baseline exploratorio y se
+#   prioriza dejar al menos UNA run por dataset antes de decidir si merece
+#   la pena insistir mas.
+#
+# TOTAL RUNS LISTADAS EN ESTE FICHERO: 9
 
-
-python3 02_two_tower.py --dataset yelp                  --dim 128 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-tt-final
-
-python3 02_two_tower.py --dataset foursquare --sample 3000000 --dim 128 --lr 0.001 --dropout 0.1 --n-neg 2 --batch 1024 --epochs 4 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt-validate
-
-python3 02_two_tower.py --dataset foursquare                  --dim 128 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-tt-final
-
-python3 03_two_tower_wide_deep.py --dataset movielens --sample 1000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 2 --wandb --wandb-project pfg-recs --wandb-group movielens-ttwd-screen
-
-python3 03_two_tower_wide_deep.py --dataset movielens --sample 3000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group movielens-ttwd-final
-
-python3 03_two_tower_wide_deep.py --dataset amazon_electronics --sample 1000000 --candidates 500  --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 2 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-ttwd-screen
-
-python3 03_two_tower_wide_deep.py --dataset amazon_electronics --sample 1000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 2 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-ttwd-screen
-
-python3 03_two_tower_wide_deep.py --dataset amazon_electronics --sample 3000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-ttwd-final
-
-python3 03_two_tower_wide_deep.py --dataset yelp --sample 1000000 --candidates 500  --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 2 --wandb --wandb-project pfg-recs --wandb-group yelp-ttwd-screen
-
-python3 03_two_tower_wide_deep.py --dataset yelp --sample 1000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 2 --wandb --wandb-project pfg-recs --wandb-group yelp-ttwd-screen
+# ============================================================================
+# 1. RUNS PENDIENTES YA DETECTADAS EN OTROS DATASETS
+# ============================================================================
 
 python3 03_two_tower_wide_deep.py --dataset yelp --sample 3000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group yelp-ttwd-final
 
-python3 03_two_tower_wide_deep.py --dataset foursquare --sample 1000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 2 --wandb --wandb-project pfg-recs --wandb-group foursquare-ttwd-screen
-
 python3 03_two_tower_wide_deep.py --dataset foursquare --sample 3000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group foursquare-ttwd-final
 
-python3 04_sasrec.py --dataset movielens --max-len 100 --d-model 64 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-sasrec
+python3 04_sasrec.py --dataset yelp --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-sasrec-final
 
-python3 04_sasrec.py --dataset movielens                  --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group movielens-sasrec-final
+# ============================================================================
+# 3. LLM+RAG OFFLINE: UNA RUN POR DATASET (BASELINE EXPLORATORIO)
+# ============================================================================
 
-python3 04_sasrec.py --dataset amazon_electronics                  --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group amazon_electronics-sasrec-final
+python3 05_llm_rag.py --dataset lastfm --llm-provider retrieval-only --max-users 50 --full --wandb --wandb-project pfg-recs --wandb-group lastfm-rag-baseline
 
-python3 04_sasrec.py --dataset yelp                  --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-sasrec-final
+# Si alguno de estos baselines retrieval-only sale razonable o prometedor,
+# se podra repetir SOLO ese dataset con un reranker real:
+# - --llm-provider gemini --gemini-model gemini-2.5-flash-lite
+# o, si hay GPU / entorno adecuado:
+# - --llm-provider ollama --ollama-model <modelo>
 
-python3 04_sasrec.py --dataset lastfm --max-len 100 --d-model 64 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-sasrec
+# ============================================================================
+# 4. MOVER PESOS
+# ============================================================================
 
-python3 04_sasrec.py --dataset lastfm --max-len 100 --d-model 64 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-sasrec
+# Dejar este para el final porque la run sigue corriendo en el servidor:
+scp -r david@bifrost3:~/pfg/pfg-models/weights/two_tower_wide_deep/amazon_electronics C:/Users/david/dev/pfg/pfg-models/weights/two_tower_wide_deep/
 
-python3 04_sasrec.py --dataset lastfm --max-len 100 --d-model 128 --n-heads 4 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-sasrec
 
-python3 04_sasrec.py --dataset foursquare                  --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group foursquare-sasrec-final
+SI NO ME DA TIEMPO A ENTRENAR EN LOCAL EJECUTAR EN GPU Y MOVER PESOS DE ESTA RUN
+python3 03_two_tower_wide_deep.py --dataset lastfm --sample 3000000 --candidates 200 --lr-wide 0.01 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group lastfm-ttwd-artist-refresh

@@ -1,0 +1,89 @@
+name: PFG Models CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: pfg-models-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-syntax-check:
+    name: Python syntax check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Compile preprocessing and model scripts
+        run: |
+          python - <<'PY'
+          import pathlib
+          import py_compile
+          import sys
+
+          roots = ["src"]
+          failures = []
+          checked = 0
+
+          for root in roots:
+              for path in pathlib.Path(root).rglob("*.py"):
+                  if any(part in {".venv", "__pycache__"} for part in path.parts):
+                      continue
+                  checked += 1
+                  try:
+                      py_compile.compile(str(path), doraise=True)
+                  except Exception as exc:
+                      failures.append((str(path), str(exc)))
+
+          print(f"Checked {checked} Python files.")
+          if failures:
+              for path, error in failures:
+                  print(f"[FAIL] {path}: {error}", file=sys.stderr)
+              sys.exit(1)
+          PY
+
+  requirements-smoke:
+    name: Requirements smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install declared requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify key runtime imports from requirements
+        run: |
+          python - <<'PY'
+          import importlib
+
+          modules = [
+              "pandas",
+              "numpy",
+              "pyarrow",
+              "elasticsearch",
+              "sentence_transformers",
+              "tqdm",
+              "wandb",
+          ]
+
+          for module in modules:
+              importlib.import_module(module)
+              print(f"[OK] Imported {module}")
+          PY

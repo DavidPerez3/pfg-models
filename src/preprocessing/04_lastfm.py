@@ -27,7 +27,9 @@ LASTFM_CANDIDATE_FILES = [
     DATA_DIR / "Last.fm_data.tsv",
 ]
 
-# Default to artist-level items for robustness against track-level sparsity.
+# LastFM 1K is natively a track-level listening log, but the current
+# benchmark returns to artist-level aggregation because the track-level
+# benchmark proved dramatically more sparse and unstable across paradigms.
 ITEM_LEVEL = "artist"  # {"artist", "track"}
 MIN_USER_INTERACTIONS = 3
 MIN_ITEM_INTERACTIONS = 3
@@ -129,13 +131,19 @@ def build_item_columns(df: pd.DataFrame, item_level: str = ITEM_LEVEL) -> pd.Dat
         if missing_track.any():
             fallback = "track_comp::" + df["artist_name"].fillna("") + "|||" + df["track_name"].fillna("")
             df.loc[missing_track, "item_id"] = fallback.loc[missing_track]
-        df["item_name"] = df["track_name"].fillna(df["artist_name"])
+        missing_track_name = df["track_name"].isna() | (df["track_name"].astype("string").str.strip() == "")
+        if missing_track_name.any():
+            df.loc[missing_track_name, "track_name"] = df.loc[missing_track_name, "track_id"]
+        df["item_name"] = df["track_name"].fillna(df["track_id"]).fillna(df["artist_name"])
+        df["title"] = df["item_name"]
     else:
         df["item_id"] = df["artist_id"].fillna("artist_name::" + df["artist_name"].fillna(""))
         df["item_name"] = df["artist_name"]
+        df["title"] = df["item_name"]
 
     df["item_id"] = df["item_id"].astype("string").str.strip().replace("", pd.NA)
     df["item_name"] = df["item_name"].astype("string").str.strip().replace("", pd.NA)
+    df["title"] = df["title"].astype("string").str.strip().replace("", pd.NA)
     return df
 
 
@@ -150,6 +158,10 @@ def aggregate_chunk(df: pd.DataFrame) -> pd.DataFrame:
             timestamp_min=("timestamp", "min"),
             timestamp_max=("timestamp", "max"),
             item_name=("item_name", "first"),
+            title=("title", "first"),
+            artist_id=("artist_id", "first"),
+            artist_name=("artist_name", "first"),
+            track_name=("track_name", "first"),
         )
         .reset_index()
     )
@@ -346,6 +358,10 @@ def main():
             timestamp_min=("timestamp_min", "min"),
             timestamp_max=("timestamp_max", "max"),
             item_name=("item_name", "first"),
+            title=("title", "first"),
+            artist_id=("artist_id", "first"),
+            artist_name=("artist_name", "first"),
+            track_name=("track_name", "first"),
         )
     )
 
@@ -381,7 +397,20 @@ def main():
     log.info("  sparsity                     : %.6f", sparsity)
     report_distribution_stats(interactions)
 
-    items = interactions[["item_id", "item_name"]].drop_duplicates("item_id").reset_index(drop=True)
+    items = (
+        interactions.groupby("item_id", as_index=False)
+        .agg(
+            item_name=("item_name", "first"),
+            title=("title", "first"),
+            artist_id=("artist_id", "first"),
+            artist_name=("artist_name", "first"),
+            track_name=("track_name", "first"),
+            total_events=("num_events", "sum"),
+            unique_listeners=("user_id", "nunique"),
+            first_seen_ts=("timestamp_min", "min"),
+            last_seen_ts=("timestamp_max", "max"),
+        )
+    )
 
     interaction_cols = [
         "user_id",
@@ -392,6 +421,11 @@ def main():
         "num_events",
         "timestamp_min",
         "timestamp_max",
+        "item_name",
+        "title",
+        "artist_id",
+        "artist_name",
+        "track_name",
         "user_id_idx",
         "item_id_idx",
     ]

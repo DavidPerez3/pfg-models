@@ -46,16 +46,51 @@ logging.getLogger("elasticsearch").setLevel(logging.WARNING)
 
 
 # Dataset-specific text builders
+def _first_nonempty(row: pd.Series, candidates: list[str]) -> str:
+    for column in candidates:
+        value = row.get(column)
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text and text.lower() not in {"nan", "none"}:
+            return text
+    return ""
+
+
+def _join_unique_text(parts: list[str], sep: str = " | ") -> str:
+    ordered = []
+    seen = set()
+    for part in parts:
+        text = str(part).strip()
+        if not text or text.lower() in {"nan", "none"}:
+            continue
+        key = text.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        ordered.append(text)
+    return sep.join(ordered)
+
+
 def text_movielens(row: pd.Series) -> str:
     parts = [str(row.get("title", ""))]
     genres = row.get("genres_str", "") or ""
     if genres and genres != "(no genres listed)":
         parts.append(genres.replace("|", " "))
-    return " | ".join(p for p in parts if p)
+    return _join_unique_text(parts)
 
 
 def text_amazon(row: pd.Series) -> str:
-    return str(row.get("item_id", ""))
+    parts = [
+        _first_nonempty(row, ["title", "item_name", "item_id"]),
+        _first_nonempty(row, ["brand"]),
+        _first_nonempty(row, ["category"]),
+        _first_nonempty(row, ["feature_text"]),
+        _first_nonempty(row, ["description"]),
+        _first_nonempty(row, ["sample_summary"]),
+        _first_nonempty(row, ["top_style"]),
+    ]
+    return _join_unique_text(parts)
 
 
 def text_yelp(row: pd.Series) -> str:
@@ -65,20 +100,30 @@ def text_yelp(row: pd.Series) -> str:
         str(row.get("city", "") or ""),
         str(row.get("state", "") or ""),
     ]
-    return " | ".join(p for p in parts if p and p != "nan")
+    return _join_unique_text(parts)
 
 
 def text_lastfm(row: pd.Series) -> str:
     parts = [
-        str(row.get("artist_name", "")),
-        str(row.get("track_name", "")),
-        str(row.get("album_name", "") or ""),
+        _first_nonempty(row, ["title", "track_name", "item_name"]),
+        _first_nonempty(row, ["artist_name"]),
+        _first_nonempty(row, ["track_name"]),
+        _first_nonempty(row, ["album_name"]),
     ]
-    return " - ".join(p for p in parts if p and p != "nan")
+    return _join_unique_text(parts)
 
 
 def text_foursquare(row: pd.Series) -> str:
-    return str(row.get("item_id", ""))
+    parts = [
+        _first_nonempty(row, ["name", "title", "item_name"]),
+        _first_nonempty(row, ["category", "categories"]),
+        _first_nonempty(row, ["city"]),
+        _first_nonempty(row, ["state"]),
+        _first_nonempty(row, ["country"]),
+        _first_nonempty(row, ["temporal_profile"]),
+        _first_nonempty(row, ["item_id"]),
+    ]
+    return _join_unique_text(parts)
 
 
 TEXT_BUILDERS = {
@@ -105,13 +150,43 @@ def items_mapping() -> dict:
                     "similarity": "cosine",
                 },
                 "title": {"type": "text"},
-                "genres": {"type": "keyword"},
-                "artist": {"type": "keyword"},
-                "track": {"type": "keyword"},
-                "categories": {"type": "keyword"},
-                "city": {"type": "keyword"},
+                "genres": {"type": "text"},
+                "artist": {"type": "text"},
+                "track": {"type": "text"},
+                "categories": {"type": "text"},
+                "city": {"type": "text"},
+                "state": {"type": "text"},
+                "country": {"type": "text"},
+                "brand": {"type": "text"},
+                "category": {"type": "text"},
+                "description": {"type": "text"},
+                "feature_text": {"type": "text"},
+                "temporal_profile": {"type": "text"},
                 "avg_rating": {"type": "float"},
                 "year": {"type": "float"},
+                "item_name": {"type": "text"},
+                "sample_summary": {"type": "text"},
+                "summary_mode": {"type": "text"},
+                "summary_examples": {"type": "text"},
+                "sample_review_excerpt": {"type": "text"},
+                "top_style": {"type": "text"},
+                "n_reviews": {"type": "integer"},
+                "rating_std": {"type": "float"},
+                "verified_ratio": {"type": "float"},
+                "avg_review_length": {"type": "float"},
+                "avg_vote": {"type": "float"},
+                "total_events": {"type": "integer"},
+                "unique_listeners": {"type": "integer"},
+                "n_checkins": {"type": "integer"},
+                "n_unique_users": {"type": "integer"},
+                "first_seen_ts": {"type": "date", "format": "epoch_second"},
+                "last_seen_ts": {"type": "date", "format": "epoch_second"},
+                "top_hour_of_day": {"type": "byte"},
+                "top_day_of_week": {"type": "byte"},
+                "top_month": {"type": "byte"},
+                "top_timezone_offset": {"type": "short"},
+                "lat": {"type": "float"},
+                "lon": {"type": "float"},
             }
         },
         "settings": {"number_of_shards": 1, "number_of_replicas": 0},
@@ -128,12 +203,17 @@ def interactions_mapping() -> dict:
                 "timestamp": {"type": "date", "format": "epoch_second"},
                 "dataset": {"type": "keyword"},
                 "play_count": {"type": "integer"},
+                "num_events": {"type": "integer"},
                 "check_in_count": {"type": "integer"},
                 "review_length": {"type": "integer"},
                 "vote": {"type": "integer"},
                 "hour_of_day": {"type": "byte"},
                 "day_of_week": {"type": "byte"},
                 "month": {"type": "byte"},
+                "timestamp_min": {"type": "date", "format": "epoch_second"},
+                "timestamp_max": {"type": "date", "format": "epoch_second"},
+                "artist_name": {"type": "text"},
+                "track_name": {"type": "text"},
             }
         },
         "settings": {"number_of_shards": 1, "number_of_replicas": 0},
@@ -241,10 +321,16 @@ def index_items(
         actions = []
         for (_, row), text, emb in zip(batch.iterrows(), texts, embeddings):
             item_id = str(row.get("item_id", ""))
+            title_value = _first_nonempty(
+                row,
+                ["title", "name", "item_name", "track_name", "item_id"],
+            )
+            artist_value = _first_nonempty(row, ["artist_name"])
+            track_value = _first_nonempty(row, ["track_name"])
             doc = {
                 "item_id": item_id,
                 "dataset": dataset_name,
-                "text_repr": text,
+                "text_repr": text or title_value or item_id,
                 "embedding": emb.tolist(),
             }
             for src, dst in [
@@ -253,13 +339,53 @@ def index_items(
                 ("artist_name", "artist"),
                 ("track_name", "track"),
                 ("categories", "categories"),
+                ("category", "category"),
                 ("city", "city"),
+                ("state", "state"),
+                ("country", "country"),
+                ("brand", "brand"),
+                ("description", "description"),
+                ("feature_text", "feature_text"),
+                ("temporal_profile", "temporal_profile"),
                 ("business_avg_stars", "avg_rating"),
                 ("year", "year"),
+                ("sample_summary", "sample_summary"),
+                ("summary_mode", "summary_mode"),
+                ("summary_examples", "summary_examples"),
+                ("sample_review_excerpt", "sample_review_excerpt"),
+                ("top_style", "top_style"),
+                ("n_reviews", "n_reviews"),
+                ("rating_std", "rating_std"),
+                ("verified_ratio", "verified_ratio"),
+                ("avg_review_length", "avg_review_length"),
+                ("avg_vote", "avg_vote"),
+                ("total_events", "total_events"),
+                ("unique_listeners", "unique_listeners"),
+                ("n_checkins", "n_checkins"),
+                ("n_unique_users", "n_unique_users"),
+                ("first_seen_ts", "first_seen_ts"),
+                ("last_seen_ts", "last_seen_ts"),
+                ("top_hour_of_day", "top_hour_of_day"),
+                ("top_day_of_week", "top_day_of_week"),
+                ("top_month", "top_month"),
+                ("top_timezone_offset", "top_timezone_offset"),
+                ("lat", "lat"),
+                ("lon", "lon"),
             ]:
                 val = row.get(src)
                 if val is not None and not (isinstance(val, float) and np.isnan(val)):
                     doc[dst] = val
+
+            if title_value:
+                doc.setdefault("title", title_value)
+            if artist_value:
+                doc.setdefault("artist", artist_value)
+            if track_value:
+                doc.setdefault("track", track_value)
+
+            item_name_value = _first_nonempty(row, ["item_name", "item_id"])
+            if item_name_value:
+                doc["item_name"] = item_name_value
 
             actions.append(
                 {
