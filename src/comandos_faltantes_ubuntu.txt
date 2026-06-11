@@ -1,51 +1,115 @@
 ﻿# Runs pendientes / propuestas de ejecucion en Ubuntu (python3)
-# Actualizado manualmente: 2026-06-03
+# Actualizado manualmente: 2026-06-09
 #
-# CRITERIO ACTUAL:
-# - LastFM vuelve a artist-level como benchmark activo.
-# - Las runs track-level lanzadas entre 2026-06-02 y 2026-06-03 quedan
-#   como evidencia exploratoria, pero NO como benchmark final.
-# - Las runs historicas artist-level vuelven a ser la referencia valida
-#   para la comparativa final.
-# - Por tanto, LastFM deja de requerir un rescreen completo inmediato.
-#   Solo tocaria relanzar alguna run artist-level si mas adelante se quiere
-#   reproducir exactamente el pipeline refrescado con pesos nuevos.
-# - LLM+RAG no tiene runs offline maduras en W&B todavia. Tras las pruebas
-#   iniciales, el enfoque se mantendra como baseline exploratorio y se
-#   prioriza dejar al menos UNA run por dataset antes de decidir si merece
-#   la pena insistir mas.
+# OBJETIVO DE ESTA VERSION:
+# - Dejar SOLO runs que todavia tiene sentido ejecutar.
+# - Separarlas en: necesarias, opcionales interesantes y exploratorias.
+# - Ordenarlas por prioridad real de ejecucion.
+# - Dar prioridad especial a YELP, porque ahora mismo es el unico dataset
+#   que tienes disponible en el pod desplegado.
 #
-# TOTAL RUNS LISTADAS EN ESTE FICHERO: 9
+# CONTEXTO ACTUAL RESUMIDO:
+# - Las runs "final" pendientes anteriores ya estan cerradas en W&B:
+#   - amazon_electronics-ttwd-final
+#   - yelp-ttwd-final
+#   - foursquare-ttwd-final
+#   - yelp-sasrec-final
+# - LastFM volvio de track-level a artist-level.
+# - Las runs track-level de LastFM se conservan solo como evidencia
+#   exploratoria y NO deben mezclarse con el benchmark final.
+# - En LastFM queda una incoherencia importante: la mejor run historica de
+#   Two-Tower no parece comparable con el pipeline artist-level final actual,
+#   asi que conviene refrescar esa familia de forma coherente.
+# - LLM+RAG sigue siendo baseline exploratorio. Solo Yelp ha mostrado una
+#   senal minimamente prometedora en retrieval-only.
+#
+# REGLA PRACTICA:
+# - Si no da tiempo a todo, ejecuta por orden y para cuando necesites.
+# - Si SOLO da tiempo a una run: haz la PRIORIDAD 1.
+#
+# ============================================================================
+# 1. PRIORIDAD MAXIMA AHORA MISMO: YELP
+# ============================================================================
+#
+# Justificacion:
+# - Es el unico dataset disponible ahora mismo en el pod desplegado.
+# - Es donde mas sentido tiene sacar una comparativa adicional util para la
+#   demo / despliegue / discusion.
+# - Ademas es el unico dataset donde LLM+RAG retrieval-only ha dado una senal
+#   no nula y minimamente defendible.
+
+# 1) OPCIONAL MUY INTERESANTE Y RECOMENDADA
+# Yelp LLM+RAG con Gemini para comparar retrieval-only vs reranker real.
+# Ejecutar solo si ya tienes GEMINI_API_KEY exportada en el entorno.
+python3 05_llm_rag.py --dataset yelp --llm-provider gemini --gemini-model gemini-2.5-flash-lite --max-users 50 --full --wandb --wandb-project pfg-recs --wandb-group yelp-rag-gemini-pilot
+
+
+# 3) OPCIONAL INTERESANTE
+# Yelp SASRec: comparar d_model=64 vs d_model=128 en la configuracion final.
+# En screen ambos quedaron practicamente empatados, asi que tiene sentido
+# validar si 64 generaliza igual o mejor en la version full/final.
+python3 04_sasrec.py --dataset yelp --max-len 100 --d-model 64 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-sasrec-d64-pilot
+
 
 # ============================================================================
-# 1. RUNS PENDIENTES YA DETECTADAS EN OTROS DATASETS
+# 2. NECESARIAS PARA DEJAR COHERENTE EL BENCHMARK FINAL
 # ============================================================================
+#
+# Estas no tienen prioridad operativa sobre Yelp en tu situacion actual, pero
+# si tienen prioridad metodologica para dejar bien cerrada la historia final.
 
-python3 03_two_tower_wide_deep.py --dataset yelp --sample 3000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group yelp-ttwd-final
+# 4) NECESARIA
+# LastFM Two-Tower artist-level refrescado con la configuracion historica mas
+# fuerte/razonable en TT (dim=64, lr=0.001, dropout=0.1, n-neg=5), pero ya
+# sobre el pipeline artist-level restaurado.
+python3 02_two_tower.py --dataset lastfm --full --dim 64 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt-artist-refresh-dim64
 
-python3 03_two_tower_wide_deep.py --dataset foursquare --sample 3000000 --candidates 1000 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group foursquare-ttwd-final
+# 5) NECESARIA SI LLM+RAG VA A SALIR EN LAS TABLAS COMPARATIVAS
+# LastFM LLM+RAG artist-level retrieval-only para no mezclar el benchmark final
+# con las runs track-level antiguas.
+python 05_llm_rag.py --dataset lastfm --llm-provider retrieval-only --max-users 50 --full --wandb --wandb-project pfg-recs --wandb-group lastfm-rag-artist-baseline
 
-python3 04_sasrec.py --dataset yelp --max-len 100 --d-model 128 --n-heads 2 --n-layers 2 --dropout 0.1 --neg-samples 5 --lr 0.001 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group yelp-sasrec-final
-
-# ============================================================================
-# 3. LLM+RAG OFFLINE: UNA RUN POR DATASET (BASELINE EXPLORATORIO)
-# ============================================================================
-
-python3 05_llm_rag.py --dataset lastfm --llm-provider retrieval-only --max-users 50 --full --wandb --wandb-project pfg-recs --wandb-group lastfm-rag-baseline
-
-# Si alguno de estos baselines retrieval-only sale razonable o prometedor,
-# se podra repetir SOLO ese dataset con un reranker real:
-# - --llm-provider gemini --gemini-model gemini-2.5-flash-lite
-# o, si hay GPU / entorno adecuado:
-# - --llm-provider ollama --ollama-model <modelo>
 
 # ============================================================================
-# 4. MOVER PESOS
+# 3. OPCIONALES INTERESANTES DE CONSISTENCIA / COMPARACION
 # ============================================================================
 
-# Dejar este para el final porque la run sigue corriendo en el servidor:
-scp -r david@bifrost3:~/pfg/pfg-models/weights/two_tower_wide_deep/amazon_electronics C:/Users/david/dev/pfg/pfg-models/weights/two_tower_wide_deep/
+# 6) OPCIONAL INTERESANTE
+# LastFM Two-Tower artist-level con dim=128 para comparar contra dim=64 en el
+# mismo pipeline final restaurado. Ejecutar solo si antes ya hiciste la run
+# dim=64 y todavia te queda margen de GPU.
+python3 02_two_tower.py --dataset lastfm --full --dim 128 --lr 0.001 --dropout 0.1 --n-neg 5 --batch 1024 --epochs 10 --wandb --wandb-project pfg-recs --wandb-group lastfm-tt-artist-refresh-dim128
 
 
-SI NO ME DA TIEMPO A ENTRENAR EN LOCAL EJECUTAR EN GPU Y MOVER PESOS DE ESTA RUN
-python3 03_two_tower_wide_deep.py --dataset lastfm --sample 3000000 --candidates 200 --lr-wide 0.01 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group lastfm-ttwd-artist-refresh
+# ============================================================================
+# 4. EXPLORATORIAS PURO "SI SOBRA TIEMPO"
+# ============================================================================
+#
+# Estas NO son necesarias para cerrar la comparativa principal. Solo las haria
+# si quieres enriquecer la discusion experimental con algun contraste extra.
+
+# 7) EXPLORATORIA
+# Yelp LLM+RAG con mas usuarios para estabilizar un poco mejor la senal del
+# piloto Gemini. Solo ejecutar si la PRIORIDAD 1 sale razonable.
+python3 05_llm_rag.py --dataset yelp --llm-provider gemini --gemini-model gemini-2.5-flash-lite --max-users 100 --full --wandb --wandb-project pfg-recs --wandb-group yelp-rag-gemini-fuller-pilot
+
+# 8) EXPLORATORIA
+# Yelp TT+WD: probar candidates=200 por si la mejoria viniese de reducir el
+# conjunto de reranking aun mas. Solo tiene sentido si candidates=500 mejora
+# claramente frente a yelp-ttwd-final.
+python3 03_two_tower_wide_deep.py --dataset yelp --sample 3000000 --candidates 200 --lr-wide 0.003 --lr-deep 0.001 --dropout 0.2 --dim 128 --n-neg 5 --wandb --wandb-project pfg-recs --wandb-group yelp-ttwd-candidates200-pilot
+
+
+# ============================================================================
+# 5. NOTAS METODOLOGICAS
+# ============================================================================
+#
+# - NO meter mas epochs "por si acaso". En las runs revisadas no hay evidencia
+#   de mejora clara por alargar entrenamiento.
+# - NO aplicar early stopping directamente sobre las metricas finales actuales
+#   si estas mirando NDCG/Recall del mismo split de evaluacion final, porque
+#   eso introduciria leakage metodologico.
+# - Si algun dia se implementa early stopping, que sea con un validation split
+#   separado y guardando best checkpoint segun validation NDCG.
+# - Las runs track-level de LastFM (mf/tt/ttwd/sasrec/rag) se mantienen solo
+#   como evidencia exploratoria y NO van a la tabla final principal.

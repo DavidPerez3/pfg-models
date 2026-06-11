@@ -10,3 +10,8 @@ __pycache__/
 *.pth
 *.ckpt
 *.npy
+*.log
+*.tar.gz
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
